@@ -1,6 +1,8 @@
 name: aptible
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch: {}
 
 jobs:
@@ -14,7 +16,7 @@ jobs:
       uses: aptible/aptible-deploy-action@v4
       with:
         type: git
-        app: vppx
-        environment: vps
+        app: xcv
+        environment: xc
         username: ${{ secrets.APTIBLE_USERNAME }}
         password: ${{ secrets.APTIBLE_PASSWORD }}

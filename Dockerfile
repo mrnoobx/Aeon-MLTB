@@ -1,5 +1,4 @@
-FROM 5hojib/aeon:latest
-
+FROM labani/noob-aeon:latest
 WORKDIR /usr/src/app
 RUN chmod -R 777 /usr/src/app
 

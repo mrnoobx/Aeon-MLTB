@@ -13,18 +13,21 @@ USER_SESSION_STRING = ""
 CMD_SUFFIX = ""  # Suffix to add to all bot commands
 AUTHORIZED_CHATS = ""  # Space separated chat_id/user_id to authorize
 SUDO_USERS = ""  # Space separated user_id for sudo access
-DEFAULT_UPLOAD = ""  # Default uploader if -ul is not specified. Options: "yt" (YouTube), "gd" (Google Drive), "rc" (Rclone), or "" (empty for no specific default).
+DEFAULT_UPLOAD = ""  # Default uploader if -ul is not specified. Options: "yt" (YouTube), "gd" (Google Drive), "rc" (Rclone), "gofile" (GoFile), or "" (empty for no specific default).
 FILELION_API = ""
+GOFILE_API = ""  # GoFile API token for uploading files to GoFile.io (get from https://gofile.io/myProfile)
+GOFILE_FOLDER_ID = ""  # Default GoFile folder ID for uploads. If not set, files upload to account root.
 STREAMWISH_API = ""
 EXCLUDED_EXTENSIONS = (
     ""  # Space separated file extensions to exclude (e.g., .log .exe)
 )
+INCLUDED_EXTENSIONS = ""
 INCOMPLETE_TASK_NOTIFIER = (
     False  # Notify for incomplete tasks on restart (requires DATABASE_URL)
 )
 YT_DLP_OPTIONS = {}  # Dictionary of yt-dlp options, e.g., {"format": "bestvideo+bestaudio/best"}
 USE_SERVICE_ACCOUNTS = False
-NAME_SUBSTITUTE = ""  # Replace/remove words: "source1/target1|source2/target2"
+NAME_SUBSTITUTE = r""  # Replace/remove words: "source1/target1|source2/target2"
 FFMPEG_CMDS = {}  # Predefined FFmpeg commands, e.g., {"preset_name": ["-vf", "scale=1280:-1"]}
 UPLOAD_PATHS = {}  # Named upload paths, e.g., {"movies": "remote:movies/", "tv": "gdrive_id_tv_folder"}
 
@@ -42,6 +45,7 @@ LEECH_FILENAME_CAPTION = ""  # Template caption for leeched files
 HYDRA_IP = ""  # IP of NZBHydra2 instance
 HYDRA_API_KEY = ""  # API key for NZBHydra2
 INSTADL_API = ""  # URL/endpoint for InstaDL API
+NAME_PREFIX = ""
 
 # GDrive Tools
 GDRIVE_ID = ""  # Default Google Drive Folder/TeamDrive ID or "root"
@@ -93,7 +97,6 @@ USER_TRANSMISSION = False  # Use user session for uploads/downloads (Premium onl
 HYBRID_LEECH = (
     False  # Switch between bot/user session based on file size (Premium only)
 )
-LEECH_FILENAME_PREFIX = ""  # Prefix for leeched filenames
 LEECH_DUMP_CHAT = []  # List of chat_ids or channel_ids to dump leeched files, e.g., [-100123456789, "channel_username"]
 THUMBNAIL_LAYOUT = ""  # Thumbnail layout for uploads (e.g., 2x2, 3x3)
 

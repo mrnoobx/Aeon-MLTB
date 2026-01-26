@@ -11,9 +11,15 @@ from aiofiles.os import path as aiopath
 from pyrogram.filters import create
 from pyrogram.handlers import MessageHandler
 
-from bot import auth_chats, excluded_extensions, sudo_users, user_data
-from bot.core.aeon_client import TgClient
+from bot import (
+    auth_chats,
+    excluded_extensions,
+    included_extensions,
+    sudo_users,
+    user_data,
+)
 from bot.core.config_manager import Config
+from bot.core.telegram_manager import TgClient
 from bot.helper.ext_utils.bot_utils import (
     get_size_bytes,
     new_task,
@@ -36,7 +42,6 @@ no_thumb = "https://graph.org/file/73ae908d18c6b38038071.jpg"
 leech_options = [
     "THUMBNAIL",
     "LEECH_SPLIT_SIZE",
-    "LEECH_FILENAME_PREFIX",
     "LEECH_FILENAME_CAPTION",
     "THUMBNAIL_LAYOUT",
     "USER_DUMP",
@@ -44,6 +49,7 @@ leech_options = [
 ]
 rclone_options = ["RCLONE_CONFIG", "RCLONE_PATH", "RCLONE_FLAGS"]
 gdrive_options = ["TOKEN_PICKLE", "GDRIVE_ID", "INDEX_URL"]
+gofile_options = ["GOFILE_TOKEN", "GOFILE_FOLDER_ID"]
 
 
 async def get_user_settings(from_user, stype="main"):
@@ -58,18 +64,6 @@ async def get_user_settings(from_user, stype="main"):
 
     if stype == "leech":
         buttons.data_button("thumbnail", f"userset {user_id} menu THUMBNAIL")
-        buttons.data_button(
-            "Leech Prefix",
-            f"userset {user_id} menu LEECH_FILENAME_PREFIX",
-        )
-        if user_dict.get("LEECH_FILENAME_PREFIX", False):
-            lprefix = user_dict["LEECH_FILENAME_PREFIX"]
-        elif (
-            "LEECH_FILENAME_PREFIX" not in user_dict and Config.LEECH_FILENAME_PREFIX
-        ):
-            lprefix = Config.LEECH_FILENAME_PREFIX
-        else:
-            lprefix = "None"
         buttons.data_button(
             "Leech Caption",
             f"userset {user_id} menu LEECH_FILENAME_CAPTION",
@@ -141,7 +135,6 @@ async def get_user_settings(from_user, stype="main"):
         text = f"""<u>Leech Settings for {name}</u>
 Leech Type is <b>{ltype}</b>
 Media Group is <b>{media_group}</b>
-Leech Prefix is <code>{escape(lprefix)}</code>
 Leech Caption is <code>{escape(lcap)}</code>
 User session is {usess}
 User dump <code>{udump}</code>
@@ -208,9 +201,24 @@ Gdrive Token <b>{tokenmsg}</b>
 Gdrive ID is <code>{gdrive_id}</code>
 Index URL is <code>{index}</code>
 Stop Duplicate is <b>{sd_msg}</b>"""
+    elif stype == "gofile":
+        buttons.data_button("GoFile Token", f"userset {user_id} menu GOFILE_TOKEN")
+        buttons.data_button(
+            "GoFile Folder ID", f"userset {user_id} menu GOFILE_FOLDER_ID"
+        )
+        buttons.data_button("Back", f"userset {user_id} back")
+        buttons.data_button("Close", f"userset {user_id} close")
+
+        gofile_token = "Set" if user_dict.get("GOFILE_TOKEN", False) else "Not Set"
+        gofile_folder = user_dict.get("GOFILE_FOLDER_ID", "None") or "None"
+
+        text = f"""<u>GoFile Settings for {name}</u>
+GoFile Token is <b>{gofile_token}</b>
+GoFile Folder ID is <code>{gofile_folder}</code>"""
     elif stype == "upload_dest":
         buttons.data_button("Gdrive", f"userset {user_id} set_upload gd")
         buttons.data_button("Rclone", f"userset {user_id} set_upload rc")
+        buttons.data_button("GoFile", f"userset {user_id} set_upload gofile")
         buttons.data_button("YouTube", f"userset {user_id} set_upload yt")
         buttons.data_button("Back", f"userset {user_id} back")
         buttons.data_button("Close", f"userset {user_id} close")
@@ -277,6 +285,7 @@ Add to Playlist ID: <code>{yt_add_to_playlist_id}</code>"""
         buttons.data_button("Leech", f"userset {user_id} leech")
         buttons.data_button("Rclone", f"userset {user_id} rclone")
         buttons.data_button("Gdrive API", f"userset {user_id} gdrive")
+        buttons.data_button("GoFile", f"userset {user_id} gofile")
         buttons.data_button("YouTube", f"userset {user_id} youtube")
 
         upload_paths = user_dict.get("UPLOAD_PATHS", {})
@@ -286,7 +295,7 @@ Add to Playlist ID: <code>{yt_add_to_playlist_id}</code>"""
             and Config.UPLOAD_PATHS
         ):
             upload_paths = Config.UPLOAD_PATHS
-        else:
+        if not upload_paths:
             upload_paths = "None"
 
         buttons.data_button("Upload Paths", f"userset {user_id} menu UPLOAD_PATHS")
@@ -300,6 +309,8 @@ Add to Playlist ID: <code>{yt_add_to_playlist_id}</code>"""
             du = "Gdrive API"
         elif default_upload == "rc":
             du = "Rclone"
+        elif default_upload == "gofile":
+            du = "GoFile"
         else:
             du = "YouTube"
 
@@ -327,11 +338,32 @@ Add to Playlist ID: <code>{yt_add_to_playlist_id}</code>"""
         else:
             ex_ex = "None"
 
-        ns_msg = "Added" if user_dict.get("NAME_SUBSTITUTE", False) else "None"
         buttons.data_button(
-            "Name Subtitute",
+            "Included Extensions", f"userset {user_id} menu INCLUDED_EXTENSIONS"
+        )
+        if user_dict.get("INCLUDED_EXTENSIONS", False):
+            inc_ex = user_dict["INCLUDED_EXTENSIONS"]
+        elif "INCLUDED_EXTENSIONS" not in user_dict:
+            inc_ex = included_extensions
+        else:
+            inc_ex = "None"
+        if user_dict.get("NAME_SUBSTITUTE", False) or (
+            "NAME_SUBSTITUTE" not in user_dict and Config.NAME_SUBSTITUTE
+        ):
+            ns_msg = "Added"
+        else:
+            ns_msg = "None"
+        buttons.data_button(
+            "Name Substitute",
             f"userset {user_id} menu NAME_SUBSTITUTE",
         )
+        if user_dict.get("NAME_PREFIX", False):
+            np_msg = user_dict["NAME_PREFIX"]
+        elif "NAME_PREFIX" not in user_dict:
+            np_msg = excluded_extensions
+        else:
+            np_msg = "None"
+        buttons.data_button("Name Prefix", f"userset {user_id} menu NAME_PREFIX")
 
         buttons.data_button(
             "YT-DLP Options",
@@ -378,7 +410,9 @@ Use <b>{tr}</b> token/config
 Upload Paths is <code>{upload_paths}</code>
 
 Name substitution is <code>{ns_msg}</code>
+Name prefix is <code>{np_msg}</code>
 Excluded Extensions is <code>{ex_ex}</code>
+Included Extensions is <code>{inc_ex}</code>
 YT-DLP Options is <code>{ytopt}</code>
 FFMPEG Commands is <code>{ffc}</code>
 Metadata is <code>{mdt}</code>
@@ -473,6 +507,12 @@ async def set_option(_, message, option):
         for x in fx:
             x = x.lstrip(".")
             value.append(x.strip().lower())
+    elif option == "INCLUDED_EXTENSIONS":
+        fx = value.split()
+        value = []
+        for x in fx:
+            x = x.lstrip(".")
+            value.append(x.strip().lower())
     elif option in ["UPLOAD_PATHS", "FFMPEG_CMDS", "YT_DLP_OPTIONS"]:
         if value.startswith("{") and value.endswith("}"):
             try:
@@ -523,6 +563,8 @@ async def get_menu(option, message, user_id):
         back_to = "rclone"
     elif option in gdrive_options:
         back_to = "gdrive"
+    elif option in gofile_options:
+        back_to = "gofile"
     elif option in [
         "YT_DEFAULT_PRIVACY",
         "YT_DEFAULT_CATEGORY",
@@ -564,7 +606,7 @@ async def ffmpeg_variables(
     if ffc:
         buttons = ButtonMaker()
         if key is None:
-            msg = "Choose which key you want to fill/edit varibales in it:"
+            msg = "Choose which key you want to fill/edit variables in it:"
             for k, v in list(ffc.items()):
                 add = False
                 for i in v:
@@ -653,7 +695,7 @@ async def edit_user_settings(client, query):
         await query.answer("Not Yours!", show_alert=True)
     elif data[2] == "setevent":
         await query.answer()
-    elif data[2] in ["leech", "gdrive", "rclone", "youtube"]:
+    elif data[2] in ["leech", "gdrive", "rclone", "gofile", "youtube"]:
         await query.answer()
         await update_user_settings(query, data[2])
     elif data[2] == "menu":

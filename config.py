@@ -1,11 +1,11 @@
 # REQUIRED CONFIG
-BOT_TOKEN = ""
-OWNER_ID = 0
-TELEGRAM_API = 0
-TELEGRAM_HASH = ""
+BOT_TOKEN = "8454378632:AAHz13is7PPEnyodYXnbLO4f6hRHky1m0SA"
+OWNER_ID = 8565045255
+TELEGRAM_API = 22419004
+TELEGRAM_HASH = "34982b52c4a83c2af3ce8f4fe12fe4e1"
 
 # Recommended for persisting settings, RSS feeds, and task history. Essential for some features.
-DATABASE_URL = ""
+DATABASE_URL = "mongodb+srv://abcdefgh96684_db_user:VnTj3iN5U6ncIuFS@cluster0.6qfvngs.mongodb.net/?appName=Cluster0"
 
 # OPTIONAL CONFIG
 TG_PROXY = {}  # Example: {"scheme": "socks5", "hostname": "11.22.33.44", "port": 1234, "username": "user", "password": "pass"}
@@ -85,7 +85,7 @@ USENET_SERVERS = [  # List of Usenet server configurations
 
 # Update
 UPSTREAM_REPO = (
-    "https://github.com/AeonOrg/Aeon-MLTB"  # Upstream repository for updates
+    "https://github.com/mrnoobx/Aeon-MLTB"  # Upstream repository for updates
 )
 UPSTREAM_BRANCH = "main"  # Default branch for updates
 
